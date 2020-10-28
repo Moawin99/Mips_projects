@@ -14,6 +14,8 @@ la $a1,  src
 lw $a2,  n
 jal memcpy
 
+move $t0, $v0
+
 # Write code to check the correctness of your code!
 li $v0, 10
 syscall
