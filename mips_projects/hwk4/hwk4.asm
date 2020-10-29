@@ -149,6 +149,27 @@ doneWith3:
     jr $ra
 
 hash_book:
+	addi $sp, $sp, -8
+	sw $s0 0($sp)
+	sw $s1, 4($sp)
+	move $s0, $a0	#hashtable
+	move $s1, $a1	#isbn
+	li $t0, 0	#total ascii value
+loopISBN:	
+	lbu $t1, 0($s1)
+	beqz $t1, getHash
+	add $t0, $t0, $t1
+	addi $s1, $s1, 1
+	j loopISBN
+	
+getHash:
+	lw $t1, 0($s0)
+	div $t0, $t1
+	mfhi $v0
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	addi $sp, $sp, 8
+
     jr $ra
 
 get_book:
