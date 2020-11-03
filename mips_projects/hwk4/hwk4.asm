@@ -45,7 +45,7 @@ doneWith1:
 strcmp:
 	addi $sp, $sp, -8
 	sw $s0, 0($sp)
-	sw $s0, 4($sp)
+	sw $s1, 4($sp)
 	move $s0, $a0	#Str1
 	move $s1, $a1	#Str2
 	lbu $t0, 0($s0)
@@ -173,6 +173,88 @@ getHash:
     jr $ra
 
 get_book:
+	addi $sp, $sp, -32
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $s4, 16($sp)
+	sw $s5, 20($sp)
+	sw $s6, 24($sp)
+	sw $ra, 28($sp)
+	move $s0, $a0		#Hashtable books
+	move $s1, $a1		#String isbn
+	lw $s2, 0($s0)		#Capacity
+	lw $s3, 4($s0)		#size
+	lw $s4, 8($s0)		#Element size
+	move $a0, $s0
+	move $a1, $s1
+	jal hash_book
+	move $t0, $v0
+	move $s5, $v0
+	mult $t0, $s4
+	mflo $t1
+	addi $t0, $s0, 12
+	add $t0, $t0, $t1
+	move $a0, $s1
+	move $a1, $t0
+	jal strcmp
+	move $t0, $v0
+	li $t1, 0
+	beq $t0, $t1, foundAtHash
+	li $t1, 13
+	beq $t0, $t1, emptyAtHash
+	li $s5, 0		#indexAt
+	addi $s0, $s0, 12
+findBook:
+	beq $s5, $s2, doneWith5Failed
+	move $a0, $s1
+	move $a1, $s0
+	jal strcmp
+	addi $s5, $s5, 1
+	move $t0, $v0
+	li $t1, 0
+	beq $t0, $t1, doneWith5Successful
+	li $t1, 13
+	beq $t0, $t1, skipBook
+	addi $s6, $s6, 1		#Elements checked
+	add $s0, $s0, $s4
+	j findBook
+	
+skipBook:
+	add $s0, $s0, $s4
+	j findBook
+	
+doneWith5Failed:
+	li $v0, -1
+	move $v1, $s6
+	j doneWith5
+	
+doneWith5Successful:
+	move $v0, $s6
+	move $v1, $s5
+	j doneWith5
+	
+emptyAtHash:
+	li $v0, -1
+	li $v1, 1
+	j doneWith5
+	
+foundAtHash:
+	move $v0, $s5
+	li $v1, 1
+	j doneWith5
+	
+doneWith5:
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $s5, 20($sp)
+	lw $s6, 24($sp)
+	lw $ra, 28($sp)
+	addi $sp, $sp, 32	
     jr $ra
 
 add_book:
