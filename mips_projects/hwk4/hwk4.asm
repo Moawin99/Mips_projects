@@ -258,6 +258,69 @@ doneWith5:
     jr $ra
 
 add_book:
+	addi $sp, $sp, -32
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $s4, 16($sp)
+	sw $s5, 20($sp)
+	sw $s6, 24($sp)
+	sw $ra, 28($sp)
+	move $s0, $a0		#Hashtable
+	move $s1, $a1		#ISBN
+	move $s2, $a2		#title
+	move $s3, $a3		#author
+	lw $t0, 0($s0)
+	lw $t1, 4($s0)
+	beq $t0, $t1, tableFull
+	move $a0, $s0
+	move $a1, $s1
+	jal get_book
+	move $t0, $v0
+	li $t1, -1
+	bne $t0, $t1, doneWith6
+	move $a0, $s0
+	move $a1, $s1
+	jal hash_book
+	move $s4, $v0		#index
+	lw $t0, 12($sp)		#element size
+	mult $s4, $t0
+	mflo $t1
+	addi $s5, $s0, 12	#books.elements[0]
+	addi $t0, $s0, 12
+	add $t0, $t0, $t1	#books.elements[hashed_value]
+	lbu $t1, 0($t0)
+	li $t2, 9
+	bne $t1, $t2, placeBookInTable
+	
+placeBookInTable:
+	move $a0, $t0
+	move $s6, $t0
+	move $a1, $s1
+	li $a2, 13
+	jal memcpy		#might not work due to null term not being there
+	move $t0, $s6
+	addi $t0, $t0, 13
+	
+	
+	
+tableFull:
+	li $v0, -1
+	li $v1, -1
+	j doneWith6
+	
+doneWith6:
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $s5, 20($sp)
+	lw $s6, 24($sp)
+	lw $ra, 28($sp)
+	addi $sp, $sp, 32
+	
     jr $ra
 
 delete_book:

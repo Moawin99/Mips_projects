@@ -42,6 +42,8 @@ la $a2, title
 la $a3, author
 jal add_book
 
+move $t0, $v0
+move $t1, $v1
 # Write code to check the correctness of your code!
 li $v0, 10
 syscall
