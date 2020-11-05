@@ -258,7 +258,7 @@ doneWith5:
     jr $ra
 
 add_book:
-	addi $sp, $sp, -32
+	addi $sp, $sp, -36
 	sw $s0, 0($sp)
 	sw $s1, 4($sp)
 	sw $s2, 8($sp)
@@ -266,7 +266,8 @@ add_book:
 	sw $s4, 16($sp)
 	sw $s5, 20($sp)
 	sw $s6, 24($sp)
-	sw $ra, 28($sp)
+	sw $s7, 28($sp)
+	sw $ra, 32($sp)
 	move $s0, $a0		#Hashtable
 	move $s1, $a1		#ISBN
 	move $s2, $a2		#title
@@ -284,27 +285,95 @@ add_book:
 	move $a1, $s1
 	jal hash_book
 	move $s4, $v0		#index
-	lw $t0, 12($sp)		#element size
+	lw $t0, 8($s0)		#element size
 	mult $s4, $t0
 	mflo $t1
 	addi $s5, $s0, 12	#books.elements[0]
 	addi $t0, $s0, 12
 	add $t0, $t0, $t1	#books.elements[hashed_value]
 	lbu $t1, 0($t0)
-	li $t2, 9
+	li $t2, '9'
 	bne $t1, $t2, placeBookInTable
+	li $s7, 1
+	lw $t1, 0($s0)		#capacity
+	addi $t1, $t1, -1
+	lw $t2, 8($s0)		#element size
+	sub $t3, $t1, $s4
+	add $t0, $t0, $t2	#books.elements[hashed + 1]
+findSlot:
+	beq $s4, $t1, wrapAround
+	lb $t5, 0($t0)
+	addi $s4, $s4, 1
+	addi $s7, $s7, 1
+	li $t4, '9'
+	bne $t4, $t5, placeBookInTable
+	add $t0, $t0, $t2
+	j findSlot
+	
+wrapAround:
+	li $s4, 0
+findSlotAfterWrap:
+	lb $t5, 0($s5)
+	addi $s4, $s4, 1
+	addi $s7, $s7, 1
+	li $t4, '9'
+	bne $t4, $t5, placeBookInTable
+	add $t0, $t0, $t2
+	j findSlotAfterWrap
+	
 	
 placeBookInTable:
 	move $a0, $t0
 	move $s6, $t0
 	move $a1, $s1
-	li $a2, 13
+	li $a2, 14
 	jal memcpy		#might not work due to null term not being there
 	move $t0, $s6
-	addi $t0, $t0, 13
-	
-	
-	
+	addi $t0, $t0, 14	#book.title
+	#addi $s7, $s7, 1		#number of elements checked
+	li $t1, 24
+	li $t2, 0
+	li $t3, 0
+	move $t6, $t0
+writeInZerosTitle:
+	beq $t1, $t2, writeInTitle
+	sb $t3, 0($t0)
+	addi $t0, $t0, 1
+	addi $t2, $t2, 1
+	j writeInZerosTitle	
+writeInTitle:
+	move $a0, $t6
+	move $a1, $s2
+	li $a2, 24
+	jal memcpy
+	move $t0, $t6
+	addi $t0, $t0, 25	#book.author
+	li $t1, 24
+	li $t2, 0
+	li $t3, 0
+	move $t6, $t0
+writeInZerosAuthor:
+	beq $t1, $t2, writeInAuthor
+	sb $t3, 0($t0)
+	addi $t0, $t0, 1
+	addi $t2, $t2, 1
+	j writeInZerosAuthor
+writeInAuthor:
+	move $a0, $t6
+	move $a1, $s3
+	li $a2, 24
+	jal memcpy
+	move $t0, $t6
+	addi $t0, $t0, 25	#book.times_sold
+	li $t1, 0
+	sw $t1, 0($t0)
+	j doneWith6Successful
+
+doneWith6Successful:
+	move $v0, $s4
+	move $v1, $s7
+	j doneWith6
+		
 tableFull:
 	li $v0, -1
 	li $v1, -1
@@ -318,8 +387,9 @@ doneWith6:
 	lw $s4, 16($sp)
 	lw $s5, 20($sp)
 	lw $s6, 24($sp)
-	lw $ra, 28($sp)
-	addi $sp, $sp, 32
+	lw $s7, 28($sp)
+	lw $ra, 32($sp)
+	addi $sp, $sp, 36
 	
     jr $ra
 
