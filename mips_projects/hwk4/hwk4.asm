@@ -394,12 +394,144 @@ doneWith6:
     jr $ra
 
 delete_book:
+	addi $sp, $sp, -24
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $s4, 16($sp)
+	sw $ra, 20($sp)
+	move $s0, $a0		#Hashtable
+	move $s1, $a1		#ISBN
+	jal get_book
+	move $t0, $v0
+	move $s2, $v0
+	move $s3, $s0
+	li $t1, -1
+	beq $t0, $t1, doneWith7Failed
+	lw $t1, 8($s0)		#element size
+	lw $s4, 4($s0)		
+	mult $t0, $t1
+	mflo $t0
+	addi $s0, $s0, 12
+	add $s0, $s0, $t0	#books.elements[hashed_value]
+	li $t2, 0		#index
+	li $t3, -1
+fillNeg1s:
+	beq $t2, $t1, decrementSize
+	sb $t3, 0($s0)
+	addi $s0, $s0, 1
+	addi $t2, $t2, 1
+	j fillNeg1s
+	
+decrementSize:
+	addi $s4, $s4, -1
+	sw $s4, 4($s3)
+	move $v0, $s2
+	j doneWith7
+
+doneWith7Failed:
+	li $v0, -1
+	j doneWith7
+	
+doneWith7:
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $ra, 20($sp)
+	addi $sp, $sp, 24
     jr $ra
 
 hash_booksale:
+	addi $sp, $sp, -12
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	move $s0, $a0		#hashTable
+	move $s1, $a1		#ISBN
+	move $s2, $a2		#ID
+	li $t0, 0		#Total sum
+	lw $t1, 0($s0)		#capacity
+loopISBNValues:
+	lbu $t2, 0($s1)
+	beqz $t2, countCustID
+	add $t0, $t0, $t2
+	addi $s1, $s1, 1
+	j loopISBNValues
+	
+countCustID:
+	li $t2, 10
+loopCustID:
+	div $s2, $t2
+	mflo $s2	
+	mfhi $t3	#remainder
+	add $t0, $t0, $t3
+	beqz $s2, getHashValue
+	j loopCustID
+	
+getHashValue:
+	div $t0, $t1
+	mfhi $v0
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	addi $sp, $sp, 12
     jr $ra
 
 is_leap_year:
+	addi $sp, $sp, -16
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	move $s0, $a0		#year
+	li $t0, 1582
+	bgt $t0, $s0, doneWith9Failed
+	li $t0, 4
+	li $t1, 400
+	li $t2, 100
+	li $t3, 0
+checkLeapYear:
+	div $s0, $t2
+	mfhi $t4
+	beqz $t4, checkCentury
+	div $s0, $t0
+	mfhi $t4
+	beqz $t4, checkIfValid
+	addi $t3, $t3, 1
+	addi $s0, $s0, 1
+	j checkLeapYear
+
+checkCentury:
+	div $s0, $t1
+	mfhi $t4
+	beqz $t4, checkIfValid
+	addi $t3, $t3, 1
+	addi $s0, $s0, 1
+	j checkLeapYear
+	
+checkIfValid:
+	bgtz $t3, negResult
+	li $v0, 1
+	j doneWith9
+
+negResult:
+	li $t0, -1
+	mult $t3, $t0
+	mflo $v0
+	j doneWith9
+	
+doneWith9Failed:
+	li $v0, 0
+	
+doneWith9:
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	addi $sp, $sp, 16
     jr $ra
 
 datestring_to_num_days:

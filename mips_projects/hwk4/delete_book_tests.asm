@@ -28,6 +28,7 @@ books:
 
 
 # Delete a book that is present in the hash table at the expected index
+.data
 isbn: .asciiz "9780060855900"
 books:
 .align 2
