@@ -907,6 +907,45 @@ doneWith11:
     jr $ra
 
 compute_scenario_revenue:
+	move $t0, $a0		#sales[0]
+	move $t1, $a1		#num_sales
+	move $t2, $a2		#scenario
+	li $t3, 28		#element size
+	addi $t1, $t1, -1
+	mult $t1, $t3
+	mflo $t4
+	add $t4, $t0, $t4	#sales[num_sales - 1]
+	li $t5, 0		#total
+	li $t6, 1		#day
+	li $t9, 0x1
+getTotal:
+	blt $t1, $0, doneWith12
+	srlv $t7, $t2, $t1
+	and $t7, $t7, $t9
+	bne $t7, $0, rightMost
+	addi $t0, $t0, 24
+	lw $t8, 0($t0)
+	mult $t8, $t6
+	mflo $t8
+	add $t5, $t5, $t8
+	addi $t0, $t0, 4
+	addi $t1, $t1, -1
+	addi $t6, $t6, 1
+	j getTotal
+	
+rightMost:
+	addi $t4, $t4, 24
+	lw $t8, 0($t4)
+	mult $t8, $t6
+	mflo $t8
+	add $t5, $t5, $t8
+	addi $t4, $t4, -52
+	addi $t1, $t1, -1
+	addi $t6, $t6, 1
+	j getTotal
+	
+doneWith12:
+	move $v0, $t5
     jr $ra
 
 maximize_revenue:
