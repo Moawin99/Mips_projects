@@ -766,42 +766,32 @@ sell_book:
 	move $s3, $a3		#cust ID
 	move $s4, $t0		#sale_date
 	move $s5, $t1		#sale_price
-	lw $t0, 0($s0)
-	lw $t1, 4($s0)
-	beq $t0, $t1, doneWith11Full
 	addi $sp, $sp, -4
 	li $t0, '1'
 	sb $t0, 0($sp)
-	addi $t0, $t0, 1
 	li $t0, '6'
-	sb $t0, 0($sp)
-	addi $t0, $t0, 1
-	li $t0, '6'
-	sb $t0, 0($sp)
-	addi $t0, $t0, 1
-	li $t0, '6'
-	sb $t0, 0($sp)
-	addi $t0, $t0, 1
-	li $t0, '6'
-	sb $t0, 0($sp)
-	addi $t0, $t0, 1
-	li $t0, '6'
-	sb $t0, 0($sp)
-	addi $t0, $t0, 1
-	li $t0, '6'
-	sb $t0, 0($sp)
-	addi $t0, $t0, 1
-	li $t0, '6'
-	sb $t0, 0($sp)
-	addi $t0, $t0, 1
-	li $t0, '6'
-	sb $t0, 0($sp)
-	addi $t0, $t0, 1
-	li $t0, '6'
-	sb $t0, 0($sp)
-	addi $t0, $t0, 1
+	sb $t0, 1($sp)
+	li $t0, '0'
+	sb $t0, 2($sp)
+	li $t0, '0'
+	sb $t0, 3($sp)
+	li $t0, '-'
+	sb $t0, 4($sp)
+	li $t0, '0'
+	sb $t0, 5($sp)
+	li $t0, '1'
+	sb $t0, 6($sp)
+	li $t0, '-'
+	sb $t0, 7($sp)
+	li $t0, '0'
+	sb $t0, 8($sp)
+	li $t0, '1'
+	sb $t0, 9($sp)
 	li $t0, '\0'
-	sb $t0, 0($sp)
+	sb $t0, 10($sp)
+	lw $t0, 0($s0)
+	lw $t1, 4($s0)
+	beq $t0, $t1, doneWith11Full
 	#li $t0, "1600-01-01"
 	move $a0, $sp
 	move $a1, $s4
@@ -903,6 +893,7 @@ doneWith11Full:
 	j doneWith11
 	
 doneWith11:
+	addi $sp, $sp, 4
 	lw $s0, 0($sp)
 	lw $s1, 4($sp)
 	lw $s2, 8($sp)
