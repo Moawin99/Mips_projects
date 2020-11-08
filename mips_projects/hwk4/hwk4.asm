@@ -535,6 +535,216 @@ doneWith9:
     jr $ra
 
 datestring_to_num_days:
+	addi $sp, $sp, -36
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $s4, 16($sp)
+	sw $s5, 20($sp)
+	sw $s6, 24($sp)
+	sw $s7, 28($sp)
+	sw $ra, 32($sp)
+	move $s0, $a0		#Date 1
+	move $s1, $a1		#Date 2
+	addi $sp, $sp, -48	#creating room on the stack for days past according to month
+	move $fp, $sp
+	li $t0, 0
+	sw $t0, 0($sp)		#jan
+	li $t0, 31
+	sw $t0, 4($sp)		#feb
+	li $t0, 59
+	sw $t0, 8($sp)		#mar
+	li $t0, 90
+	sw $t0, 12($sp)		#april
+	li $t0, 120
+	sw $t0, 16($sp)		#may
+	li $t0, 151
+	sw $t0, 20($sp)		#june
+	li $t0, 181
+	sw $t0, 24($sp)		#july
+	li $t0, 212
+	sw $t0, 28($sp)		#aug
+	li $t0, 243
+	sw $t0, 32($sp)		#sept
+	li $t0, 273
+	sw $t0, 36($sp)		#oct
+	li $t0, 304
+	sw $t0, 40($sp)		#nov
+	li $t0, 334
+	sw $t0, 44($sp)		#dec
+convertYearToNumberDate1:
+	li $t0, 1000
+	lbu $t1, 0($s0)		
+	addi $t1, $t1, -48
+	mult $t0, $t1
+	mflo $s2		#placing thousands place into s2	s2 holds year for date 1
+	li $t0, 100
+	lbu $t1, 1($s0)
+	addi $t1, $t1, -48
+	mult $t0, $t1
+	mflo $t1
+	add $s2, $s2, $t1	#adding 100's place onto s2
+	li $t0, 10
+	lbu $t1, 2($s0)
+	addi $t1, $t1, -48
+	mult $t0, $t1
+	mflo $t1
+	add $s2, $s2, $t1	#adding 10's place into s2
+	lbu $t1, 3($s0)
+	addi $t1, $t1, -48
+	add $s2, $s2, $t1	#adding 1's place into s2 
+convertMonthToNumberDate1:
+	li $t0, 10
+	lbu $t1, 5($s0)
+	addi $t1, $t1, -48
+	mult $t0, $t1
+	mflo $s3
+	lbu $t1, 6($s0)
+	addi $t1, $t1, -48
+	add $s3, $s3, $t1	#adding 1's place into s3
+convertDayToNumverDate1:
+	li $t0, 10
+	lbu $t1, 8($s0)
+	addi $t1, $t1, -48
+	mult $t0, $t1
+	mflo $s4
+	lbu $t1, 9($s0)
+	addi $t1, $t1, -48
+	add $s4, $s4, $t1	#adding 1's place into s4
+	li $s5, 1600
+	li $s6, 0
+daysFromFirstDateYear:
+	bgt $s5, $s2, daysFromFirstDateMonth
+	move $a0, $s5
+	jal is_leap_year
+	move $t0, $v0
+	li $t1, 1
+	beq $t0, $t1, addLeapYear 
+	addi $s6, $s6, 365
+	addi $s5, $s5, 1
+	j daysFromFirstDateYear
+	
+addLeapYear:
+	addi $s6, $s6, 366
+	addi $s5, $s5, 1
+	j daysFromFirstDateYear
+
+daysFromFirstDateMonth:
+	move $t0, $fp
+	li $t3, 4
+	addi $s3, $s3, -1
+	mult $t3, $s3
+	mflo $s3
+	add $t0, $t0, $s3
+	lw $t1, 0($t0)
+	add $s6, $s6, $t1
+	li $t0, 1
+daysFromFirstDateDays:
+	beq $t0, $s4, daysFromFirstDate
+	addi $s6, $s6, 1
+	addi $t0, $t0, 1
+	j daysFromFirstDateDays
+	
+daysFromFirstDate:
+	move $s2, $s6
+
+convertYearToNumberDate2:
+	li $t0, 1000
+	lbu $t1, 0($s1)		
+	addi $t1, $t1, -48
+	mult $t0, $t1
+	mflo $s3		#placing thousands place into s3	s2 holds year for date 2
+	li $t0, 100
+	lbu $t1, 1($s1)
+	addi $t1, $t1, -48
+	mult $t0, $t1
+	mflo $t1
+	add $s3, $s3, $t1	#adding 100's place onto s3
+	li $t0, 10
+	lbu $t1, 2($s1)
+	addi $t1, $t1, -48
+	mult $t0, $t1
+	mflo $t1
+	add $s3, $s3, $t1	#adding 10's place into s3
+	lbu $t1, 3($s1)
+	addi $t1, $t1, -48
+	add $s3, $s3, $t1	#adding 1's place into s3
+convertMonthToNumberDate2:
+	li $t0, 10
+	lbu $t1, 5($s1)
+	addi $t1, $t1, -48
+	mult $t0, $t1
+	mflo $s4
+	lbu $t1, 6($s1)
+	addi $t1, $t1, -48
+	add $s4, $s4, $t1	#adding 1's place into s4
+convertDayToNumverDate2:
+	li $t0, 10
+	lbu $t1, 8($s1)
+	addi $t1, $t1, -48
+	mult $t0, $t1
+	mflo $s5
+	lbu $t1, 9($s1)
+	addi $t1, $t1, -48
+	add $s5, $s5, $t1	#adding 1's place into s5
+	li $s6, 1600
+	li $s7, 0
+daysFromSecondDateYear:
+	bgt $s6, $s3, daysFromSecondDateMonth
+	move $a0, $s6
+	jal is_leap_year
+	move $t0, $v0
+	li $t1, 1
+	beq $t0, $t1, addLeapYear2
+	addi $s7, $s7, 365
+	addi $s6, $s6, 1
+	j daysFromSecondDateYear
+	
+addLeapYear2:
+	addi $s7, $s7, 366
+	addi $s6, $s6, 1
+	j daysFromSecondDateYear
+
+daysFromSecondDateMonth:
+	move $t0, $fp
+	li $t3, 4
+	addi $s4, $s4, -1
+	mult $t3, $s4
+	mflo $s4
+	add $t0, $t0, $s4
+	lw $t1, 0($t0)
+	add $s7, $s7, $t1
+	li $t0, 1
+daysFromSecondDateDays:
+	beq $t0, $s5, daysFromSecondDate
+	addi $s7, $s7, 1
+	addi $t0, $t0, 1
+	j daysFromSecondDateDays
+	
+daysFromSecondDate:
+	move $s3, $s7
+
+finalCalculation:
+	bgt $s2, $s3, doneWith10Failed
+	sub $v0, $s3, $s2
+	j doneWith10
+	
+doneWith10Failed:
+	li $v0, -1
+	
+doneWith10:
+	addi $sp, $sp, 48
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $s5, 20($sp)
+	lw $s6, 24($sp)
+	lw $s7, 28($sp)
+	lw $ra, 32($sp)
+	addi $sp, $sp, 36
     jr $ra
 
 sell_book:
