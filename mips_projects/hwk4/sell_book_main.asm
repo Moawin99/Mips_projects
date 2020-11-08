@@ -14,7 +14,7 @@ books:
 .word 3
 # empty or deleted entry starts here
 .align 2
-.byte 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+.byte 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
 # Book struct start
 .align 2
 .ascii "9780060855900\0"
@@ -128,6 +128,9 @@ sw $t1, 4($sp)
 li $t0, 929402 # garbage
 li $t1, 6322233 # garbage
 jal sell_book
+
+move $t0, $v0
+move $t1, $v1
 
 # Write code to check the correctness of your code!
 li $v0, 10

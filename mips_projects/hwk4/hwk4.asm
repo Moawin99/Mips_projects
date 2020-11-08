@@ -748,6 +748,171 @@ doneWith10:
     jr $ra
 
 sell_book:
+	lw $t0, 0($sp)
+	lw $t1, 4($sp)
+	addi $sp, $sp, -36
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $s4, 16($sp)
+	sw $s5, 20($sp)
+	sw $s6, 24($sp)
+	sw $s7, 28($sp)
+	sw $ra, 32($sp)
+	move $s0, $a0		#Sales Hashtable
+	move $s1, $a1		#Books Hashtable
+	move $s2, $a2		#ISBN
+	move $s3, $a3		#cust ID
+	move $s4, $t0		#sale_date
+	move $s5, $t1		#sale_price
+	lw $t0, 0($s0)
+	lw $t1, 4($s0)
+	beq $t0, $t1, doneWith11Full
+	addi $sp, $sp, -4
+	li $t0, '1'
+	sb $t0, 0($sp)
+	addi $t0, $t0, 1
+	li $t0, '6'
+	sb $t0, 0($sp)
+	addi $t0, $t0, 1
+	li $t0, '6'
+	sb $t0, 0($sp)
+	addi $t0, $t0, 1
+	li $t0, '6'
+	sb $t0, 0($sp)
+	addi $t0, $t0, 1
+	li $t0, '6'
+	sb $t0, 0($sp)
+	addi $t0, $t0, 1
+	li $t0, '6'
+	sb $t0, 0($sp)
+	addi $t0, $t0, 1
+	li $t0, '6'
+	sb $t0, 0($sp)
+	addi $t0, $t0, 1
+	li $t0, '6'
+	sb $t0, 0($sp)
+	addi $t0, $t0, 1
+	li $t0, '6'
+	sb $t0, 0($sp)
+	addi $t0, $t0, 1
+	li $t0, '6'
+	sb $t0, 0($sp)
+	addi $t0, $t0, 1
+	li $t0, '\0'
+	sb $t0, 0($sp)
+	#li $t0, "1600-01-01"
+	move $a0, $sp
+	move $a1, $s4
+	jal datestring_to_num_days
+	move $s4, $v0
+updateTimes_sold:
+	move $a0, $s1
+	move $a1, $s2
+	jal get_book
+	move $t0, $v0
+	li $t1, -1
+	beq $t0, $t1, doneWith11BookDNE
+	addi $t1, $s1, 12
+	lw $t2, 8($s1)		#element size for books
+	mult $t0, $t2
+	mflo $t2
+	add $t1, $t1, $t2
+	addi $t1, $t1, 64
+	lw $t0, 0($t1)
+	addi $t0, $t0, 1
+	sw $t0, 0($t1)
+getHashedBookSale:
+	move $a0, $s0
+	move $a1, $s2
+	move $a2, $s3
+	jal hash_booksale
+	move $s6, $v0		#index
+	lw $t1, 8($s0)		#element size for booksale
+	addi $t2, $s0, 12	#sales.elements[0]
+	mult $s6, $t1
+	mflo $t3
+	add $t2, $t2, $t3	#sales.elements[hashed_value]
+	lbu $t3, 0($t2)
+	li $t4, '9'
+	li $s7, 1		#number of elements checked
+	beq $t3, $t4, beginProbing
+	move $a0, $t2
+	move $a1, $s2
+	li $a2, 14
+	jal memcpy
+	addi $t2, $t2, 16	#sales.elements[hashed_value].custID
+	sw $s3, 0($t2)
+	addi $t2, $t2, 4
+	sw $s4, 0($t2)
+	addi $t2, $t2, 4
+	sw $s5, 0($t2)
+	j getResult
+	
+beginProbing:
+	lw $t4, 0($s0)		#capacity
+probingBookSale:
+	add $t2, $t2, $t1
+	addi $s6, $s6, 1
+	beq $s6, $t4, wrapBookSale
+	addi $s7, $s7, 1		#MIGHT BE A PROBLEM HERE
+	lbu $t3, 0($t2)
+	li $t5, '9'
+	bne $t3, $t5, placeSale
+	j probingBookSale
+	
+wrapBookSale:
+	li $s6, 0
+	move $t2, $s0
+	addi $t2, $t2, 12
+continueProbingSale:
+	lbu $t3, 0($t2)
+	li $t5, '9'
+	addi $s7, $s7, 1
+	bne $t3, $t5, placeSale
+	add $t2, $t2, $t1
+	addi $s6, $s6, 1
+	j continueProbingSale
+	
+placeSale:
+	move $a0, $t2
+	move $a1, $s2
+	li $a2, 14
+	jal memcpy
+	addi $t2, $t2, 16	#sales.elements[hashed_value].custID
+	sw $s3, 0($t2)
+	addi $t2, $t2, 4
+	sw $s4, 0($t2)
+	addi $t2, $t2, 4
+	sw $s5, 0($t2)
+	
+getResult:
+	move $v0, $s6
+	move $v1, $s7
+	j doneWith11
+
+doneWith11BookDNE:
+	li $v0, -2
+	li $v1, -2
+	j doneWith11
+	
+doneWith11Full:
+	li $v0, -1
+	li $v1, -1
+	j doneWith11
+	
+doneWith11:
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $s5, 20($sp)
+	lw $s6, 24($sp)
+	lw $s7, 28($sp)
+	lw $ra, 32($sp)
+	addi $sp, $sp, 36
     jr $ra
 
 compute_scenario_revenue:
