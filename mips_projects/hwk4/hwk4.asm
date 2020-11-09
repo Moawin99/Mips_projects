@@ -949,6 +949,60 @@ doneWith12:
     jr $ra
 
 maximize_revenue:
+	addi $sp, $sp, -24
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $s4, 16($sp)
+	sw $ra, 20($sp)
+	move $s0, $a0		#sales
+	move $s1, $a1		#num_sales
+	addi $s3, $s1, -1
+	li $t0, 2
+	li $s4, 2
+	li $s2, 0
+loopNTimes:
+	beq $s2, $s3, continue13
+	mult $t0, $s4
+	mflo $s4
+	addi $s2, $s2, 1
+	j loopNTimes
+
+continue13:
+	addi $s4, $s4, -1	#upper bound
+	li $s2, 0
+	move $a0, $s0
+	move $a1, $s1
+	move $a2, $s2
+	jal compute_scenario_revenue
+	move $s3, $v0
+	addi $s2, $s2, 1
+loopALOT:
+	beq $s2, $s4, doneWithhw4
+	move $a0, $s0
+	move $a1, $s1
+	move $a2, $s2
+	jal compute_scenario_revenue
+	move $t0, $v0
+	bgt $t0, $s3, setGreaterThan
+	addi $s2, $s2, 1
+	j loopALOT
+	
+setGreaterThan:
+	move $s3, $t0
+	addi $s2, $s2, 1
+	j loopALOT
+	
+doneWithhw4:
+	move $v0, $s3
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $ra, 20($sp)
+	addi $sp, $sp, 24
     jr $ra
 
 ############################ DO NOT CREATE A .data SECTION ############################
