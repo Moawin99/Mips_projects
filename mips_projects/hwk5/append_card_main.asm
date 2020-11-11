@@ -27,8 +27,35 @@ la $a0, card_list
 lw $a1, card_num
 jal append_card
 
+move $t0, $v0
+move $a0, $v0
+li $v0, 1
+syscall
+
+li $a0, '\n'
+li $v0, 11
+syscall
+
+la $t0, card_list
+lw $t1, 0($t0) #size
+lw $t2, 4($t0) #pointer to card 
+
+loop:
+    beqz $t1, done_loop
+    lw $t3, 0($t2)
+    move $a0, $t3
+    li $v0, 1
+    syscall
+    li $a0, '\n'
+    li $v0, 11
+    syscall
+    lw $t2, 4($t2)
+    addi $t1, $t1, -1
+    j loop
+done_loop:
 # Write code to check the correctness of your code!
 li $v0, 10
 syscall
+
 
 .include "hwk5.asm"

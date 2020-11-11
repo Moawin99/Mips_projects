@@ -15,9 +15,98 @@ init_list:
    jr $ra
 
 append_card:
+	addi $sp, $sp, -16
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	move $s0, $a0		#card_list
+	move $s1, $a1		#card_num
+	li $v0, 9
+	li $a0, 8
+	syscall
+	move $s2, $v0
+	sw $s1, 0($s2)		#init new node
+	sw $0, 4($s2)		#init new node
+	lw $t0, 0($s0)
+	bgtz $t0, updateLastNode
+	li $t0, 1
+	sw $t0, 0($s0)
+	sw $s2, 4($s0)
+	move $v0, $t0
+	j doneWith2
+updateLastNode:
+	lw $t0, 4($s0)		#address of head node
+	move $t1, $t0
+loopToLastNode:
+	lw $t0, 4($t0)
+	beqz $t0, foundLastNode
+	move $t1, $t0
+	j loopToLastNode
+
+foundLastNode:
+	sw $s2, 4($t1)
+	lw $t0, 0($s0)
+	addi $t0, $t0, 1
+	sw $t0, 0($s0)
+	move $v0, $t0
+doneWith2:
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	addi $sp, $sp, 16
    jr $ra
 
 create_deck:
+	addi $sp, $sp, -36
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $s4, 16($sp)
+	sw $s5, 20($sp)
+	sw $s6, 24($sp)
+	sw $s7, 28($sp)
+	sw $ra, 32($sp)
+	li $a0, 8
+	li $v0, 9
+	syscall 
+	move $a0, $v0
+	move $s0, $v0		#Card List
+	jal init_list
+	li $s1, 0x00645330
+	li $s2, 80
+	li $s3, 0x0064533a	#ascii value 58 bc '9' is 57
+	li $s4, 0	#index
+	move $s5, $s1
+loopFill:
+	beq $s4, $s2, deckFilled
+	move $a0, $s0
+	move $a1, $s1
+	jal append_card
+	addi $s4, $s4, 1
+	addi $s1, $s1, 1
+	beq $s1, $s3, resetNUM
+	j loopFill
+	
+resetNUM:
+	move $s1, $s5
+	j loopFill
+	
+deckFilled:
+	move $v0, $s0
+doneWith3:
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $s5, 20($sp)
+	lw $s6, 24($sp)
+	lw $s7, 28($sp)
+	lw $ra, 32($sp)
+	addi $sp, $sp, 36 
    jr $ra
 
 deal_starting_cards:
