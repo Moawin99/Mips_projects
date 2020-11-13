@@ -178,6 +178,57 @@ doneWith4:
    jr $ra
 
 get_card:
+	addi $sp, $sp, -28
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $s4, 16($sp)
+	sw $s5, 20($sp)
+	sw $s6, 24($sp)
+	move $s0, $a0		#card_list
+	move $s1, $a1		#index to find at
+	li $t1, 0		#loop index
+	lw $t0, 0($s0)
+	addi $t0, $t0, -1
+	bgt $s1, $t0, doneWith5Failed
+	lw $t0, 4($s0)		#head node
+loopIndex:
+	beq $t1, $s1, foundNum
+	lw $t0, 4($t0)
+	addi $t1, $t1, 1
+	j loopIndex
+	
+foundNum:
+	li $t2, 0x00645339
+	lw $t3, 0($t0)	
+	bgt $t3, $t2, cardIsUp
+	li $v0, 1
+	move $v1, $t3
+	j doneWith5
+	
+cardIsUp:
+	li $v0, 2
+	move $v1, $t3
+	j doneWith5
+	
+	
+	
+doneWith5Failed:
+	li $v0, -1
+	li $v1, -1
+	j doneWith5
+	
+doneWith5:
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $s5, 20($sp)
+	lw $s6, 24($sp)
+	addi $sp, $sp, 28
+	
     jr $ra
 
 check_move:
