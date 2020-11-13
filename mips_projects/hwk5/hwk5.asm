@@ -110,6 +110,71 @@ doneWith3:
    jr $ra
 
 deal_starting_cards:
+	addi $sp, $sp, -36
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $s4, 16($sp)
+	sw $s5, 20($sp)
+	sw $s6, 24($sp)
+	sw $s7, 28($sp)
+	sw $ra, 32($sp)
+	move $s0, $a0		#board[0]
+	move $s1, $a1		#deck
+	li $s2, 44
+	li $s3, 0		#index
+	move $s4, $s0		#copy of board[0]
+	li $s6, 0
+	li $s7, 9
+	lw $t0, 4($s1)		#gets head node from deck
+loopDealing:
+	li $t4, 34
+	beq $s3, $s2, changeHeadNode
+	beq $s6, $s7, resetBoardPos
+	bgt $s3, $t4, dealFaceUp
+	lw $t3, 0($s0)
+continueDealing:
+	move $a0, $t3
+	lw $t1, 0($t0)		#node.num
+	lw $s5, 4($t0)		#node.nextNode
+	sw $0, 4($t0)
+	move $a1, $t1
+	jal append_card
+	lw $t2, 0($s1)
+	addi $t2, $t2, -1		#size - 1 in deck
+	sw $t2, 0($s1)
+	addi $s3, $s3, 1
+	addi $s6, $s6, 1
+	addi $s0, $s0, 4
+	move $t0, $s5
+	j loopDealing
+	
+resetBoardPos:
+	li $s6, 0
+	move $s0, $s4
+	j loopDealing
+	
+dealFaceUp:
+	lw $t3, 0($s0)
+	li $t4, 'u'
+	sb $t4, 2($s5)
+	j continueDealing
+	
+changeHeadNode:
+	sw $s5, 4($s1)
+
+doneWith4:
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $s5, 20($sp)
+	lw $s6, 24($sp)
+	lw $s7, 28($sp)
+	lw $ra, 32($sp)
+	addi $sp, $sp, 36
    jr $ra
 
 get_card:

@@ -20,6 +20,7 @@ node253109:
 .word 7685168
 .word node411020
 
+
 .text
 .globl main
 main:
@@ -27,7 +28,6 @@ la $a0, card_list
 lw $a1, card_num
 jal append_card
 
-move $t0, $v0
 move $a0, $v0
 li $v0, 1
 syscall
