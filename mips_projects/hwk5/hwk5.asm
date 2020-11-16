@@ -232,6 +232,98 @@ doneWith5:
     jr $ra
 
 check_move:
+	addi $sp, $sp, -36
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $s4, 16($sp)
+	sw $s5, 20($sp)
+	sw $s6, 24($sp)
+	sw $s7, 28($sp)
+	sw $ra, 32($sp)
+	move $s0, $a0		#board[]
+	move $s1, $a1		#deck
+	move $s2, $a2		#move
+checkAllCases:
+	srl $t0, $a2, 24
+	li $t1, 0x11
+	and $t0, $t0, $t1
+	li $t1, 1
+	beq $t1, $t0, checkOtherBytes
+	bnez $t0, notValid
+	j checkDonorColumn
+	
+checkOtherBytes:	#gets to here after seeing that the 3rd byte is 1
+	li $t2, 0x11
+	and $t1, $a2, $t2
+	bnez $t1, notValid
+	srl $t1, $a2, 8
+	and $t1, $t1, $t2
+	bnez $t1, notValid
+	srl $t1, $a2, 16
+	and $t1, $t1, $t2
+	bnez $t1, notValid
+	j checkIfDeckEmpty
+	
+checkIfDeckEmpty:
+	lw $t1, 0($s1)
+	beqz $t1, deckEmpty
+	j legalDealMove
+	
+	
+checkDonorColumn:
+	andi $t0, $a2, 0xFF
+	bltz $t0, invalidDonCol
+	li $t1, 8
+	bgt $t0, $t1, invalidDonCol
+	j checkDonRow
+	
+checkDonRow:
+	andi $t0, $a2, 0xFF
+	li $t1, 4
+	mult $t0, $t1
+	mflo $t1
+	add $t1, $t1, $s0
+	lw $s3, 0($t1)		#size of selected column
+	srl $s4, $a2, 8
+	andi $s4, $s4, 0xFF
+	addi $s3, $s3, -1
+	bgt $s4, $s3, invalidDonRow
+	bltz $s4, invalidDonRow
+					#LEFT OFF HERE
+	
+notValid:
+	li $v0, -1
+	j doneWith6
+	
+deckEmpty:
+	li $v0, -2
+	j doneWith6
+	
+invalidDonCol:
+	li $v0, -3
+	j doneWith6
+	
+invalidDonRow:
+	li $v0, -4
+	j doneWith6
+	
+legalDealMove:
+	li $v0, 1
+	j doneWith6
+	
+doneWith6:
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $s5, 20($sp)
+	lw $s6, 24($sp)
+	lw $s7, 28($sp)
+	lw $ra, 32($sp)
+	addi $sp, $sp, 36
     jr $ra
 
 clear_full_straight:
