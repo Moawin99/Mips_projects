@@ -246,8 +246,8 @@ check_move:
 	move $s1, $a1		#deck
 	move $s2, $a2		#move
 checkAllCases:
-	srl $t0, $a2, 24
-	li $t1, 0x11
+	srl $t0, $s2, 24
+	li $t1, 0xFF
 	and $t0, $t0, $t1
 	li $t1, 1
 	beq $t1, $t0, checkOtherBytes
@@ -255,13 +255,13 @@ checkAllCases:
 	j checkDonorColumn
 	
 checkOtherBytes:	#gets to here after seeing that the 3rd byte is 1
-	li $t2, 0x11
-	and $t1, $a2, $t2
+	li $t2, 0xFF
+	and $t1, $s2, $t2
 	bnez $t1, notValid
-	srl $t1, $a2, 8
+	srl $t1, $s2, 8
 	and $t1, $t1, $t2
 	bnez $t1, notValid
-	srl $t1, $a2, 16
+	srl $t1, $s2, 16
 	and $t1, $t1, $t2
 	bnez $t1, notValid
 	j checkIfDeckEmpty
@@ -273,26 +273,107 @@ checkIfDeckEmpty:
 	
 	
 checkDonorColumn:
-	andi $t0, $a2, 0xFF
+	andi $t0, $s2, 0xFF
 	bltz $t0, invalidDonCol
 	li $t1, 8
+	bgt $t0, $t1, invalidDonCol
+	srl $t0, $s2, 16
+	andi $t0, $t0, 0xFF
+	bltz $t0, invalidDonCol
 	bgt $t0, $t1, invalidDonCol
 	j checkDonRow
 	
 checkDonRow:
-	andi $t0, $a2, 0xFF
+	andi $t0, $s2, 0xFF
 	li $t1, 4
 	mult $t0, $t1
 	mflo $t1
 	add $t1, $t1, $s0
 	lw $s3, 0($t1)		#size of selected column
-	srl $s4, $a2, 8
+	lw $s3, 0($s3)
+	srl $s4, $s2, 8
 	andi $s4, $s4, 0xFF
 	addi $s3, $s3, -1
 	bgt $s4, $s3, invalidDonRow
 	bltz $s4, invalidDonRow
-					#LEFT OFF HERE
+	j checkIfColSame
 	
+checkIfColSame:
+	andi $t0, $s2, 0xFF
+	srl $t1, $s2, 16
+	andi $t1, $t1, 0xFF
+	beq $t0, $t1, colAreSame
+	j checkIfFaceDown
+	
+checkIfFaceDown:
+	andi $t0, $s2, 0xFF
+	li $t1, 4
+	mult $t0, $t1
+	mflo $t1
+	add $t0, $t1, $s0
+	lw $s3, 0($t0)		#destination col
+	srl $s4, $s2, 8
+	andi $s4, $s4, 0xFF	#destination row
+	move $a0, $s3
+	move $a1, $s4
+	jal get_card
+	move $t0, $v0
+	li $t1, 1
+	beq $t0, $t1, cardIsDown
+	j checkIfInOrder
+	
+checkIfInOrder:
+	li $t0, 0	#index
+loopColOrder:
+	beq $t0, $s4, compareNums
+	lw $s5, 4($s3)
+	move $s3, $s5
+	addi $t0, $t0, 1
+	j loopColOrder
+
+compareNums:
+	lw $s5, 4($s3)		#currentCard.num
+	lw $s6, 4($s3)		#nextCard
+	lw $t0, 0($s6)		#nextCard.num
+	lw $s7, 4($s6)		#nextCard.nextCard
+	beqz $s7, cardsInOrder
+	lw $t1, 0($s7)
+	addi $t1, $t1, 1
+	bne $t0, $t1, outOfOrder
+	move $s3, $s6
+	j compareNums
+	
+cardsInOrder:
+	andi $s3, $s2, 0xFF	#don Col
+	srl $s4, $s2, 8
+	andi $s4, $s4, 0xFF	#don Row
+	srl $s5, $s2, 16
+	andi $s5, $s5, 0xFF	#des col
+	li $t0, 4
+	mult $s5, $t0
+	mflo $t0
+	add $t0, $t0, $s0
+	lw $t1, 0($t0)		#cardList of board[des]
+	lw $t2, 0($t1)		#size of des col
+	beqz $t2, colEmpty
+	addi $t2, $t2, -1
+	move $s5, $t2		#last card at des col
+	li $t0, 4
+	mult $s3, $t0
+	mflo $t0
+	add $s3, $s0, $t0
+	lw $s3, 0($s3)		#card list for don col
+	move $a0, $t1
+	move $a1, $t2
+	jal get_card
+	move $s6, $v1	#last card in des col
+	move $a0, $s3
+	move $a1, $s4
+	jal get_card
+	move $s5, $v1
+	addi $s5, $s5, 1
+	bne $s5, $s6, rankNoMatch
+	j legalNonEmpty
 notValid:
 	li $v0, -1
 	j doneWith6
@@ -309,8 +390,32 @@ invalidDonRow:
 	li $v0, -4
 	j doneWith6
 	
+colAreSame:
+	li $v0, -5
+	j doneWith6
+	
+cardIsDown:
+	li $v0, -6
+	j doneWith6
+	
+outOfOrder:
+	li $v0, -7
+	j doneWith6
+	
+rankNoMatch:
+	li $v0, -8
+	j doneWith6
+	
 legalDealMove:
 	li $v0, 1
+	j doneWith6
+	
+colEmpty:
+	li $v0, 2
+	j doneWith6
+	
+legalNonEmpty:
+	li $v0, 3
 	j doneWith6
 	
 doneWith6:
