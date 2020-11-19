@@ -432,6 +432,120 @@ doneWith6:
     jr $ra
 
 clear_full_straight:
+	addi $sp, $sp, -36
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $s4, 16($sp)
+	sw $s5, 20($sp)
+	sw $s6, 24($sp)
+	sw $s7, 28($sp)
+	sw $ra, 32($sp)
+	move $s0, $a0		#board[]
+	move $s1, $a1		#col_num
+	bltz $s1, invalidCol
+	li $t0, 8
+	bgt $s1, $t0, invalidCol
+	li $t0, 4
+	mult $t0, $s1
+	mflo $t0
+	add $t1, $t0, $s0
+	lw $s2, 0($t1)		#CardList at board[num_col]
+	li $t2, 10
+	lw $t3, 0($s2)		#cardList size
+	blt $t3, $t2, under10Cards
+	li $s3, 0		#index
+	li $s4, 0		#number of facing up 9's found
+	li $s5, 0x00755339	#9 facing up
+
+find9s:
+	li $t0, -1
+	beq $t0, $t1,  found9s
+	move $a0, $s2
+	move $a1, $s3
+	jal get_card
+	move $t1, $v0
+	move $t2, $v1
+	li $t3, 2
+	bne $t1, $t3, coutineFinding9
+	beq $s5, $t2, compare9
+coutineFinding9:
+	addi $s3, $s3, 1
+	j find9s
+compare9:
+	move $s6, $s3		#index of 9
+	move $s7, $s6		#copy of index 9
+	addi $s3, $s3, 1
+	addi $s4, $s4, 1
+	j find9s
+		
+found9s:
+	li $t0, 1
+	beqz $s4, noStraights
+	li $s3, 10		#index for decrementing
+checkStraight:
+	beqz $s3, straightFound
+	move $a0, $s2
+	move $a1, $s6
+	jal get_card
+	move $t0, $v1
+	bne $t0, $s5, noStraights
+	addi $s5, $s5, -1
+	addi $s6, $s6, 1
+	addi $s3, $s3, -1
+	j checkStraight
+	
+straightFound:
+	lw $t0, 0($s2)		#size
+	move $t1, $t0
+	bne $t1, $s6, noStraights
+	addi $t0, $t0, -10
+	sw $t0, 0($s2)		#new size
+	beqz $t0, emptyCol
+	addi $s7, $s7, -2	#index of 2 card before 9
+	li $t0, 0
+findFlipCard:
+	beq $t0, $s7, flipCard
+	lw $t1, 4($s2)
+	lw $t2, 4($t1)		#card.nextCard
+	addi $t0, $t0, 1
+	move $s2, $t2
+	j findFlipCard	
+	
+invalidCol:
+	li $v0, -1
+	j doneWith7
+	
+under10Cards:
+	li $v0, -2
+	j doneWith7
+
+noStraights:
+	li $v0, -3
+	j doneWith7
+	
+flipCard:
+	li $t0, 'u'
+	sb $t0, 2($t2)
+	li $v0, 1
+	j doneWith7
+		
+emptyCol:
+	li $v0, 2
+	j doneWith7
+
+doneWith7:
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $s5, 20($sp)
+	lw $s6, 24($sp)
+	lw $s7, 28($sp)
+	lw $ra, 32($sp)
+	addi $sp, $sp, 36
     jr $ra
 
 deal_move:
