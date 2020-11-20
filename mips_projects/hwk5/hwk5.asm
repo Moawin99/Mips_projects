@@ -549,6 +549,56 @@ doneWith7:
     jr $ra
 
 deal_move:
+	addi $sp, $sp, -32
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $s4, 16($sp)
+	sw $s5, 20($sp)
+	sw $s6, 24($sp)
+	sw $ra, 28($sp)
+	move $s0, $a0		#board[]
+	move $s1, $a1		#deck
+	li $s2, 0		#index
+	li $s3, 9		#bounds
+	move $s4, $s0		#copy of board
+	lw $t2, 4($s1)		#cardNode from deck
+loopDeal:
+	beq $s2, $s3, lowerSizeOfDeck
+	li $t0, 'u'
+	lw $s5, 0($s0)		#cardList at board[index]
+	sb $t0, 2($t2)
+	lw $s6, 4($t2)		#card.nextCard
+	lw $t0, 0($t2)		#card.num
+	move $a0, $s5
+	move $a1, $t0
+	jal append_card
+	move $a0, $s4
+	move $a1, $s2
+	jal clear_full_straight
+	addi $s2, $s2, 1
+	addi $s0, $s0, 4
+	move $t2, $s6
+	j loopDeal
+	
+	
+lowerSizeOfDeck:
+	lw $t0, 0($s1)
+	addi $t0, $t0, -9
+	sw $t0, 0($s1)
+	sw $s6, 4($s1)
+
+doneWith8:
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $s5, 20($sp)
+	lw $s6, 24($sp)
+	lw $ra, 28($sp)
+	addi $sp, $sp, 32
     jr $ra
 
 move_card:
