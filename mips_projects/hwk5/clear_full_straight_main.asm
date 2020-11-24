@@ -84,17 +84,12 @@ node969333:
 .word node183374
 
 
-
-
-
 .text
 .globl main
 main:
 la $a0, board
 lw $a1, col_num
 jal clear_full_straight
-
-move $t0, $v0
 
 # Write code to check the correctness of your code!
 li $v0, 10

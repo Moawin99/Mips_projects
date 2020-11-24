@@ -602,6 +602,126 @@ doneWith8:
     jr $ra
 
 move_card:
+	addi $sp, $sp, -36
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $s4, 16($sp)
+	sw $s5, 20($sp)
+	sw $s6, 24($sp)
+	sw $s7, 28($sp)
+	sw $ra, 32($sp)
+	move $s0, $a0		#board[]
+	move $s1, $a1		#deck
+	move $s2, $a2		#move
+	jal check_move
+	move $t0, $v0
+	bltz $t0, invalidMove
+	li $t1, 1
+	beq $t0, $t1, dealCards
+	j moveTheCards
+	
+moveTheCards:
+	andi $t0, $s2, 0xFF	#don col num
+	srl $t1, $s2, 8
+	andi $t1, $t1, 0xFF	#don row num
+	srl $s5, $s2, 16
+	andi $s5, $s5, 0xFF	#recipient col num
+	li $t3, 4
+	mult $s5, $t3
+	mflo $t3
+	add $t3, $t3, $s0
+	lw $s5, 0($t3)		#recipient cardList
+	li $t3, 4
+	mult $t0, $t3
+	mflo $t3
+	add $t3, $t3, $s0
+	lw $s3, 0($t3)		#board[col]
+	li $t0, -1		#index
+	li $s6, 0		#counter
+loopToRow:
+	beq $t0, $t1, beginMoving
+	lw $s4, 4($s3)		#card.next
+	addi $t0, $t0, 1
+	move $s3, $s4		#when this finishes this should be card at index {row}
+	j loopToRow
+	
+beginMoving:
+	beqz $s3, doneMoving
+	move $a0, $s5
+	lw $a1, 0($s3)
+	lw $s3, 4($s3)
+	jal append_card
+	addi $s6, $s6, 1
+	j beginMoving
+	
+doneMoving:
+	andi $t3, $s2, 0xFF
+	li $t4, 4
+	mult $t3, $t4
+	mflo $t4
+	add $s5, $t4, $s0
+	lw $s5, 0($s5)
+	lw $t0, 0($s5)
+	sub $t0, $t0, $s6
+	sw $t0, 0($s5)		#new size
+	andi $t0, $s2, 0xFF	#col num
+	srl $t1, $s2, 8
+	andi $t1, $t1, 0xFF	#row num
+	li $t3, 4
+	mult $t3, $t0
+	mflo $t3
+	add $t3, $t3, $s0
+	lw $t3, 0($t3)		#board[col]
+	beqz $t1, newHeadNode
+	addi $t1, $t1, -1	#m - 1
+	li $t0, 0		#index
+getToCardBefore:
+	beq $t0, $t1, checkFlipCard
+	lw $t3, 4($t3)
+	addi $t0, $t0, 1
+	j getToCardBefore
+	
+checkFlipCard:
+	lw $t0, 4($t3)
+	lw $t2, 0($t0)
+	li $t1, 'u'
+	sb $t1, 2($t0)
+	j successfulMove
+	
+newHeadNode:
+	sw $0, 0($t3)
+	sw $0, 4($t3)
+	li $v0, 1
+	j doneWith9
+	
+dealCards:
+	move $a0, $s0
+	move $a1, $s1
+	jal deal_move
+	j successfulMove
+	
+	
+successfulMove:
+	li $v0, 1
+	j doneWith9
+	
+invalidMove:
+	li $v0, -1
+	j doneWith9
+
+doneWith9:
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $s5, 20($sp)
+	lw $s6, 24($sp)
+	lw $s7, 28($sp)
+	lw $ra, 32($sp)
+	addi $sp, $sp, 36
     jr $ra
 
 load_game:
