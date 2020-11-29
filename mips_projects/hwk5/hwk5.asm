@@ -725,6 +725,210 @@ doneWith9:
     jr $ra
 
 load_game:
+	addi $sp, $sp, -36
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $s4, 16($sp)
+	sw $s5, 20($sp)
+	sw $s6, 24($sp)
+	sw $s7, 28($sp)
+	sw $ra, 32($sp)
+	move $s0, $a0		#filename
+	move $s1, $a1		#board[]
+	move $s2, $a2		#deck
+	move $s3, $a3		#moves[]
+	li $v0, 13
+	li $a1, 0
+	li $a2, 0
+	syscall			#open file
+	move $s4, $v0
+	bltz $s4, errorLoadingFile
+	move $a0, $s2
+	jal init_list
+	addi $sp, $sp, -4
+	li $s5, '\n'
+loopToEndLine:
+	li $v0, 14
+	move $a0, $s4
+	move $a1, $sp
+	li $a2, 1
+	syscall
+	lb $t0, 0($sp)
+	beq $t0, $s5, deckReadFromFile
+	li $t0, 'S'
+	sb $t0, 1($sp)
+	li $t0, 'd'
+	sb $t0, 2($sp)
+	lw $t0, 0($sp)
+	move $a0, $s2
+	move $a1, $t0
+	jal append_card
+	li $v0, 14
+	move $a0, $s4
+	move $a1, $sp
+	li $a2, 1
+	syscall
+	j loopToEndLine
+	
+	
+deckReadFromFile:
+	li $s6, 0	#count for number of moves
+readAllMoves:
+	li $v0, 14
+	move $a0, $s4
+	move $a1, $sp
+	li $a2, 1
+	syscall
+	lb $t0, 0($sp)
+	beq $t0, $s5, doneReadingMoves
+	addi $t0, $t0, -48
+	move $s7, $t0		#first char of move
+	li $v0, 14
+	move $a0, $s4
+	move $a1, $sp
+	li $a2, 1
+	syscall
+	lb $t0, 0($sp)
+	addi $t0, $t0, -48
+	sll $t0, $t0, 8
+	or $s7, $s7, $t0	#second char of move
+	li $v0, 14
+	move $a0, $s4
+	move $a1, $sp
+	li $a2, 1
+	syscall
+	lb $t0, 0($sp)
+	addi $t0, $t0, -48
+	sll $t0, $t0, 16
+	or $s7, $s7, $t0	#third char of move
+	li $v0, 14
+	move $a0, $s4
+	move $a1, $sp
+	li $a2, 1
+	syscall
+	lb $t0, 0($sp)
+	addi $t0, $t0, -48
+	sll $t0, $t0, 24
+	or $s7, $s7, $t0	#fourth char of move
+	sw $s7, 0($s3)		#saving the move
+	addi $s3, $s3, 4
+	addi $s6, $s6, 1
+	li $v0, 14
+	move $a0, $s4
+	move $a1, $sp
+	li $a2, 1
+	syscall		#skip over the space
+	lbu $t0, 0($sp)
+	beq $t0, $s5, doneReadingMoves
+	j readAllMoves
+	
+doneReadingMoves:
+	li $s7, 0	#index for init all columns
+	move $s5, $s1	#temp of board[]
+initAllCol:
+	lw $t0, 0($s1)
+	move $a0, $t0
+	li $t1, 9
+	beq $s7, $t1, readRows
+	jal init_list
+	addi $s7, $s7, 1
+	addi $s1, $s1, 4
+	j initAllCol
+	
+readRows:
+	move $s1, $s5
+	sw $0, 0($sp)
+loopRows:
+	li $v0, 14
+	move $a0, $s4
+	move $a1, $sp
+	li $a2, 1
+	syscall
+	lbu $s7, 0($sp)
+	li $t0, '\n'
+	beq $s7, $t0, checkIfDone
+	li $t0, ' '
+	beq $s7, $t0, skip2Spaces
+	li $v0, 14
+	move $a0, $s4
+	move $a1, $sp
+	li $a2, 1
+	syscall
+	lbu $t0, 0($sp)
+	sb $s7, 0($sp)
+	sb $t0, 1($sp)
+	lw $t0, 0($sp)		#num
+	lw $t1, 0($s1)		#col
+	move $a0, $t1
+	move $a1, $t0
+	jal append_card
+	addi $s1, $s1, 4
+	j loopRows
+	
+skip2Spaces:
+	li $v0, 14
+	move $a0, $s4
+	move $a1, $sp
+	li $a2, 1
+	syscall
+	addi $s1, $s1, 4
+	j loopRows
+	
+checkIfDone:
+	li $v0, 14
+	move $a0, $s4
+	move $a1, $sp
+	li $a2, 1
+	syscall
+	move $t0, $v0
+	beqz $t0, doneReadingFile
+	lbu $s7, 0($sp)
+	li $v0, 14
+	move $a0, $s4
+	move $a1, $sp
+	li $a2, 1
+	syscall
+	lbu $t0, 0($sp)
+	sb $s7, 0($sp)
+	sb $t0, 1($sp)
+	lw $t0, 0($sp)		#num
+	move $s1, $s5		#reset col to [0]
+	lw $t1, 0($s1)
+	move $a0, $t1
+	move $a1, $t0
+	jal append_card
+	addi $s1, $s1, 4
+	j loopRows
+	
+	
+	
+doneReadingFile:
+	move $a0, $s4
+	li $v0, 16
+	syscall
+	li $v0, 1
+	move $v1, $s6
+	j doneWith10
+	
+	
+errorLoadingFile:
+	li $v0, -1
+	li $v1, -1
+
+doneWith10:
+	addi $sp, $sp, 4
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $s5, 20($sp)
+	lw $s6, 24($sp)
+	lw $s7, 28($sp)
+	lw $ra, 32($sp)
+	addi $sp, $sp, 36
     jr $ra
 
 simulate_game:
