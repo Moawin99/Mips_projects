@@ -1,6 +1,6 @@
-# erase this line and type your first and last name here in a comment
-# erase this line and type your Net ID here in a comment (e.g., jmsmith)
-# erase this line and type your SBU ID number here in a comment (e.g., 111234567)
+# Mark Moawad
+# msmoawad
+# 112198934
 
 ############################ DO NOT CREATE A .data SECTION ############################
 ############################ DO NOT CREATE A .data SECTION ############################
@@ -270,7 +270,6 @@ checkIfDeckEmpty:
 	lw $t1, 0($s1)
 	beqz $t1, deckEmpty
 	j legalDealMove
-	
 	
 checkDonorColumn:
 	andi $t0, $s2, 0xFF
@@ -772,7 +771,6 @@ loopToEndLine:
 	syscall
 	j loopToEndLine
 	
-	
 deckReadFromFile:
 	li $s6, 0	#count for number of moves
 readAllMoves:
@@ -858,7 +856,10 @@ loopRows:
 	syscall
 	lbu $t0, 0($sp)
 	sb $s7, 0($sp)
+	sb $t0, 2($sp)
+	li $t0, 'S'
 	sb $t0, 1($sp)
+	sb $0, 3($sp)
 	lw $t0, 0($sp)		#num
 	lw $t1, 0($s1)		#col
 	move $a0, $t1
@@ -902,8 +903,6 @@ checkIfDone:
 	addi $s1, $s1, 4
 	j loopRows
 	
-	
-	
 doneReadingFile:
 	move $a0, $s4
 	li $v0, 16
@@ -911,7 +910,6 @@ doneReadingFile:
 	li $v0, 1
 	move $v1, $s6
 	j doneWith10
-	
 	
 errorLoadingFile:
 	li $v0, -1
@@ -932,6 +930,87 @@ doneWith10:
     jr $ra
 
 simulate_game:
+	addi $sp, $sp, -36
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $s4, 16($sp)
+	sw $s5, 20($sp)
+	sw $s6, 24($sp)
+	sw $s7, 28($sp)
+	sw $ra, 32($sp)
+	move $s0, $a0		#filename
+	move $s1, $a1		#board[]
+	move $s2, $a2		#deck
+	move $s3, $a3		#moves[]
+	jal load_game
+	move $t0, $v0
+	bltz $t0, errorLoadingGame
+	move $s4, $v1		#num of moves
+	li $s5, 0		#index
+	li $s6, 0		#num of moves executed
+	move $s7, $s1
+beginGame:
+	beq $s5, $s4, doneWithGame
+	lw $t0, 0($s3)
+	move $a0, $s1
+	move $a1, $s2
+	move $a2, $t0
+	jal move_card
+	move $t0, $v0
+	bltz $t0, skipCurrentMove
+	addi $s5, $s5, 1
+	addi $s6, $s6, 1
+	addi $s3, $s3, 4
+checkIfWin:
+	lw $t2, 0($s2)		#size
+	li $t3, 9
+	li $t4, 0
+loopIfWin:
+	beq $t4, $t3, checkIfSize0
+	lw $t5, 0($s1)
+	lw $t6, 0($t5)		#col size
+	add $t2, $t2, $t6
+	addi $t4, $t4, 1
+	addi $s1, $s1, 4
+	j loopIfWin
+	
+checkIfSize0:
+	beqz $t2, wonGame
+	move $s1, $s7
+	j beginGame
+	
+wonGame:
+	move $v0, $s6
+	li $v1, 1
+	j doneWith11
+	
+doneWithGame:
+	move $v0, $s6
+	li $v1, -2
+	j doneWith11
+	
+skipCurrentMove:
+	addi $s5, $s5, 1
+	addi $s3, $s3, 4
+	j beginGame
+	
+errorLoadingGame:
+	li $v0, -1
+	li $v1, -1
+
+doneWith11:
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $s4, 16($sp)
+	lw $s5, 20($sp)
+	lw $s6, 24($sp)
+	lw $s7, 28($sp)
+	lw $ra, 32($sp)
+	addi $sp, $sp, 36
     jr $ra
 
 ############################ DO NOT CREATE A .data SECTION ############################

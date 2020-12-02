@@ -1,6 +1,6 @@
 # Simulate game01.txt - results in a win
 .data
-filename: .asciiz "game01.txt"
+filename: .asciiz "games/game01.txt"
 ### Deck ###
 # Garbage values
 deck: .word 24259929 51331435
@@ -67,6 +67,8 @@ la $a2, deck
 la $a3, moves
 jal simulate_game
 
+move $t0, $v0
+move $t1, $v1
 # Write code to check the correctness of your code!
 li $v0, 10
 syscall
